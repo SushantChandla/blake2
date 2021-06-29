@@ -12,40 +12,40 @@ class Blake2s extends Blake2 {
   /// [key] may be null, but if set, it will be used for the
   /// first round of compression.
   ///
-  /// [salt], [personalization], and [iv] may be null
+  /// [salt], [personalization], and [iv_] may be null
   /// or must `== 8` characters in length.
   Blake2s({
     this.digestLength = 32,
     this.key,
     this.salt,
     this.personalization,
-    this.iv,
-  })  : assert(digestLength != null && digestLength > 0 && digestLength <= 32),
+    Uint32List? iv,
+  })  : assert(digestLength > 0 && digestLength <= 32),
         assert(salt == null || salt.length == 8),
-        assert(personalization == null || personalization.length == 8),
-        assert(iv == null || iv.length == 8) {
-    iv ??= Uint32List.fromList(<int>[
-      0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
-      0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19,
-    ]);
+        assert(personalization == null || personalization.length == 8){
+
+      this.iv =iv??Uint32List.fromList(<int>[
+        0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
+        0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19,
+      ]);
 
     reset();
   }
 
   @override
-  final Uint8List key;
+  final Uint8List? key;
 
   @override
-  final Uint8List salt;
+  final Uint8List? salt;
 
   @override
-  final Uint8List personalization;
+  final Uint8List? personalization;
 
   @override
   final int digestLength;
 
   @override
-  Uint32List iv;
+  late Uint32List iv;
 
   @override
   final int bitLength = 32;
@@ -73,24 +73,24 @@ class Blake2s extends Blake2 {
   /// must both be 8 characters in length.
   static Blake2s fromStrings({
     int digestLength = 32,
-    String key,
-    String salt,
-    String personalization,
-    Uint32List iv,
+    String? key,
+    String? salt,
+    String? personalization,
+    Uint32List? iv,
   }) {
-    assert(digestLength != null && digestLength > 0 && digestLength <= 32);
+    assert(digestLength > 0 && digestLength <= 32);
     assert(salt == null || salt.length == 8);
     assert(personalization == null || personalization.length == 8);
-    assert(iv == null || iv.length == 8);
+    assert(iv==null || iv.length == 8);
 
     return Blake2s(
       digestLength: digestLength,
       key: (key == null) ? null : Uint8List.fromList(key.codeUnits),
       salt: (salt == null) ? null : Uint8List.fromList(salt.codeUnits),
-      personalization: (personalization != null)
-          ? Uint8List.fromList(personalization.codeUnits)
-          : null,
-      iv: iv,
+      personalization: (personalization == null)
+          ? null
+          : Uint8List.fromList(personalization.codeUnits),
+      iv:iv,
     );
   }
 }

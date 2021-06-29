@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:test/test.dart';
@@ -22,10 +23,10 @@ void main() {
   });
 }
 
-List<Uint8List> _calculateHashes(Type type) {
+List<Uint8List?> _calculateHashes(Type type) {
   assert(type != null && (type == Blake2b || type == Blake2s));
 
-  final hashes = List<Uint8List>(keys.length);
+  final hashes = List<Uint8List?>.filled(keys.length, null);
 
   var updateCount = 0;
 
@@ -34,9 +35,10 @@ List<Uint8List> _calculateHashes(Type type) {
 
     final blake2 = (type == Blake2b)
         ? Blake2b.fromStrings(
-            key: keys[i],
-            salt: salts[i],
-            personalization: personalizations[i],
+            key: keys[i].isEmpty ? null : keys[i],
+            salt: salts[i].isEmpty ? null : salts[i],
+            personalization:
+                personalizations[i].isEmpty ? null : personalizations[i],
           )
         : Blake2s.fromStrings(
             key: keys[i],
@@ -45,7 +47,7 @@ List<Uint8List> _calculateHashes(Type type) {
           );
 
     for (var j = 0; j < numUpdates; j++) {
-      blake2.updateWithString(updates[updateCount]);
+      blake2.updateWithString(updates[updateCount]!);
       updateCount++;
     }
 
@@ -64,14 +66,14 @@ List<String> _getVectors(String filename) {
 
   final vectors = file.readAsLinesSync();
 
-  for (var i = 0; i < vectors.length; i++) {
-    if (vectors[i].isEmpty) vectors[i] = null;
-  }
+  // for (var i = 0; i < vectors.length; i++) {
+  // if (vectors[i]!.isEmpty) vectors[i] =null;
+  // }
 
   return vectors;
 }
 
-bool _compareHashes(List<Uint8List> tests, String filename) {
+bool _compareHashes(List<Uint8List?> tests, String filename) {
   assert(tests != null);
   assert(filename != null);
 
@@ -81,11 +83,14 @@ bool _compareHashes(List<Uint8List> tests, String filename) {
 
   for (var i = 0; i < vectors.length; i++) {
     final vector = Uint8List.fromList(
-      vectors[i].split(',').map(int.parse).toList(),
+      (vectors[i].isEmpty ? 'null' : vectors[i])
+          .split(',')
+          .map(int.parse)
+          .toList(),
     );
 
     for (var j = 0; j < vector.length; j++) {
-      if (vector[j] != tests[i][j]) return false;
+      if (vector[j] != tests[i]![j]) return false;
     }
   }
 
